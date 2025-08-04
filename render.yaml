@@ -1,11 +1,5 @@
 services:
   - type: web
     name: protect-pdf-backend
-    env: python
-    region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: bash start.sh
+    env: docker
     plan: free
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10

@@ -2,8 +2,11 @@ services:
   - type: web
     name: protect-pdf-backend
     env: python
+    region: oregon
     buildCommand: |
-      apt-get update && apt-get install -y qpdf
+      apt-get update
+      apt-get install -y qpdf
+      pip install -r requirements.txt
     startCommand: python app.py
     plan: free
     envVars:

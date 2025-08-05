@@ -15,7 +15,7 @@ def health_check():
 # ✅ Main protect PDF route
 @app.route('/protect-pdf', methods=['POST'])
 def protect_pdf():
-    print("Received protect-pdf request")  # for Render logs
+    print("Received protect-pdf request")  # For Render logs
 
     if 'pdf' not in request.files or 'password' not in request.form:
         return jsonify({"error": "PDF file and password are required"}), 400
@@ -29,20 +29,38 @@ def protect_pdf():
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             input_path = os.path.join(tmpdir, "input.pdf")
+            decrypted_path = os.path.join(tmpdir, "decrypted.pdf")
             output_path = os.path.join(tmpdir, "protected.pdf")
 
-            # Save the uploaded PDF
+            # Save uploaded file
             pdf_file.save(input_path)
 
-            # Encrypt PDF using qpdf
-            command = [
-                "qpdf",
-                "--encrypt", password, password, "256",
-                "--", input_path, output_path
-            ]
-            subprocess.run(command, check=True)
+            # ✅ Step 1: Try to decrypt (in case it's already encrypted)
+            try:
+                subprocess.run(
+                    ["qpdf", "--decrypt", input_path, decrypted_path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True
+                )
+                input_for_encryption = decrypted_path
+            except subprocess.CalledProcessError:
+                # If decrypt fails, assume it's not encrypted and use original
+                input_for_encryption = input_path
 
-            # Send the protected PDF back
+            # ✅ Step 2: Encrypt the (possibly decrypted) PDF
+            encrypt_command = [
+                "qpdf", "--encrypt", password, password, "256", "--",
+                input_for_encryption, output_path
+            ]
+            result = subprocess.run(
+                encrypt_command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+
+            # ✅ Return protected file
             return send_file(
                 output_path,
                 as_attachment=True,
@@ -50,13 +68,15 @@ def protect_pdf():
                 mimetype='application/pdf'
             )
 
-    except subprocess.CalledProcessError:
-        return jsonify({"error": "Failed to protect PDF. qpdf error."}), 500
+    except subprocess.CalledProcessError as e:
+        print("QPDF Error:", e.stderr.decode())  # Log actual qpdf error
+        return jsonify({"error": "Failed to protect PDF: " + e.stderr.decode()}), 500
+
     except Exception as e:
+        print("Unexpected error:", str(e))
         return jsonify({"error": str(e)}), 500
 
-# ✅ Safer port binding for Render + local dev
+# ✅ Render/local port binding
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Render sets $PORT, default 5000 locally
+    port = int(os.environ.get('PORT', 5000))  # Default for local dev
     app.run(host='0.0.0.0', port=port)
-

@@ -1,25 +1,22 @@
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
 import os
 import subprocess
 import tempfile
-from flask_cors import CORS
-import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
 
+# ✅ Health check route
 @app.route('/', methods=['GET'])
 def health_check():
     return jsonify({"status": "Backend is running"}), 200
 
+# ✅ Main protect PDF route
 @app.route('/protect-pdf', methods=['POST'])
 def protect_pdf():
-    print("Received protect-pdf request")  # 👈 Add this
-    ...
+    print("Received protect-pdf request")  # for Render logs
 
-
-@app.route('/protect-pdf', methods=['POST'])
-def protect_pdf():
     if 'pdf' not in request.files or 'password' not in request.form:
         return jsonify({"error": "PDF file and password are required"}), 400
 
@@ -58,12 +55,7 @@ def protect_pdf():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-    
-
+# ✅ Safer port binding for Render + local dev
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
+    port = int(os.environ.get('PORT', 5000))  # 5000 for local dev
     app.run(host='0.0.0.0', port=port)
-
-    
-

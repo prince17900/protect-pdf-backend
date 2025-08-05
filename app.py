@@ -8,6 +8,16 @@ import os
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
 
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({"status": "Backend is running"}), 200
+
+@app.route('/protect-pdf', methods=['POST'])
+def protect_pdf():
+    print("Received protect-pdf request")  # 👈 Add this
+    ...
+
+
 @app.route('/protect-pdf', methods=['POST'])
 def protect_pdf():
     if 'pdf' not in request.files or 'password' not in request.form:
@@ -54,4 +64,6 @@ def protect_pdf():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
+
+    
 

@@ -57,5 +57,6 @@ def protect_pdf():
 
 # ✅ Safer port binding for Render + local dev
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # 5000 for local dev
+    port = int(os.environ.get('PORT', 5000))  # Render sets $PORT, default 5000 locally
     app.run(host='0.0.0.0', port=port)
+
